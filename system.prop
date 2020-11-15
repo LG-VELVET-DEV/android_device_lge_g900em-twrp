@@ -1,0 +1,7 @@
+ro.display.series=LG VELVET 5G
+ro.sf.lcd_density=640
+ro.lge.lcd_default_brightness=178
+sys.usb.controller=a600000.dwc3
+ro.product.board=lito
+ro.board.platform=lito
+ro.adb.secure=0

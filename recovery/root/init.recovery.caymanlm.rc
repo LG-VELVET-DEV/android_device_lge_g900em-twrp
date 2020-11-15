@@ -1,0 +1,134 @@
+# Copyright (c) 2009-2012, 2014-2015, The Linux Foundation. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of The Linux Foundation nor
+#       the names of its contributors may be used to endorse or promote
+#       products derived from this software without specific prior written
+#       permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+on init
+    export ANDROID_ROOT /system_root
+    start boot-1-0
+    start keymaster-4-0
+    start qseecom-service
+    start patchlevel
+
+on fs
+    wait /dev/block/platform/soc/${ro.boot.bootdevice}
+    symlink /dev/block/platform/soc/${ro.boot.bootdevice} /dev/block/bootdevice
+    chmod 0660 /dev/qseecom
+    chown system drmrpc /dev/qseecom
+    chmod 0664 /dev/ion
+    chown system system /dev/ion
+
+on post-fs
+    chown system system /persist-lg
+    chmod 0771 /persist-lg
+    write /dev/ipa 1
+
+on post-fs-data
+    setprop vold.post_fs_data_done 1
+
+on boot
+    export LD_CONFIG_FILE /sbin/ld.config.txt
+
+    chown system system  /sys/class/lge_mme/mme_ctrl/mme_command
+    chmod 664  /sys/class/lge_mme/mme_ctrl/mme_command
+    chown system system  /sys/class/lge_mme/mme_ctrl/hw_test_value
+    chmod 664  /sys/class/lge_mme/mme_ctrl/hw_test_value
+
+    # Workaround for adb not coming up
+    setprop sys.usb.config adb
+    wait /sbin/patchlevel_set
+
+service boot-1-0 /sbin/android.hardware.boot@1.0-service
+    user root
+    group root
+    disabled
+    seclabel u:r:recovery:s0
+
+service tui_comm-1-0 /vendor/bin/hw/vendor.qti.hardware.tui_comm@1.0-service-qti
+    class hal
+    user system
+    group system drmrpc 
+
+service qteeconnector-hal-1-0 /vendor/bin/hw/vendor.qti.hardware.qteeconnector@1.0-service
+    class hal
+    user system
+    group system
+
+service keystore_auth /sbin/keystore_auth
+    oneshot
+    user system
+    group root
+    disabled
+    seclabel u:r:recovery:s0
+
+service keystore /sbin/keystore /data/misc/keystore
+    user root
+    group root drmrpc readproc
+    disabled
+    seclabel u:r:recovery:s0
+
+service gatekeeper-1-0 /vendor/bin/hw/android.hardware.gatekeeper@1.0-service-qti
+    user root
+    group root
+    disabled
+    seclabel u:r:recovery:s0
+
+service gatekeeperd /system/bin/gatekeeperd /data/misc/gatekeeper
+    class late_start
+    user system
+    writepid /dev/cpuset/system-background/tasks
+
+on property:fde.ready=1 && property:patchlevel.done=*
+    start ven_qseecomd
+    exec - system system -- /vendor/bin/init.qti.qseecomd.sh
+
+on property:crypto.ready=1 && property:patchlevel.done=*
+    start ven_qseecomd
+    exec - system system -- /vendor/bin/init.qti.qseecomd.sh
+
+on property:init.svc.ven_qseecomd=running && property:sys.listeners.registered=true
+    start sys_hwservicemanager
+    start sys_servicemanager
+    start vndservicemanager
+
+on property:init.svc.sys_hwservicemanager=running && property:hwservicemanager.ready=true
+    start gatekeeper-1-0
+    start gatekeeperd
+
+on property:crypto.ready=0
+    stop ven_qseecomd
+    stop sys_servicemanager
+    stop gatekeeper-1-0
+    stop gatekeeperd
+
+on property:product.lge.vold.publicvolume_uuid=*
+    setprop vendor.lge.vold.publicvolume_uuid ${product.lge.vold.publicvolume_uuid}
+
+service patchlevel /sbin/patchlevel.sh
+    user root
+    group root
+    disabled
+    oneshot
+    seclabel u:r:recovery:s0
+
