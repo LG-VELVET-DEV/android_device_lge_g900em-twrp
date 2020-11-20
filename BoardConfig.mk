@@ -121,7 +121,7 @@ AB_OTA_UPDATER := true
 
 TARGET_NO_KERNEL := false
 TARGET_NO_RECOVERY := false
-BOARD_USES_RECOVERY_AS_BOOT := true
+#BOARD_USES_RECOVERY_AS_BOOT := true
 BOARD_BUILD_SYSTEM_ROOT_IMAGE := true
 
 # A/B updater updatable partitions list. Keep in sync with the partition list
