@@ -3,11 +3,8 @@
 system		/system_root			ext4		slotselect;logical
 vendor		/vendor			ext4		slotselect;display="Vendor";logical
 product		/product		ext4			slotselect;display="Product";logical
-/system_image	emmc	/dev/block/bootdevice/by-name/system				flags=slotselect;flashimg=1
-/vendor_image	emmc	/dev/block/bootdevice/by-name/vendor				flags=slotselect;flashimg=1
-/product_image  emmc	/dev/block/bootdevice/by-name/product				flags=slotselect;flashimg=1
 /super          emmc    /dev/block/bootdevice/by-name/super                 flags=display="super";backup=1;flashimg=1
-/data			ext4	/dev/block/by-name/userdata					        flags=encryptable=/dev/block/bootdevice/by-name/encrypt;length=-134217728
+/data			f2fs	/dev/block/by-name/userdata					        flags=encryptable=/dev/block/bootdevice/by-name/encrypt;length=-134217728
 /firmware		vfat	/dev/block/bootdevice/by-name/modem					flags=slotselect;display="Firmware";mounttodecrypt;fsflags=context=u:object_r:firmware_file:s0
 #/misc			emmc	/dev/block/bootdevice/by-name/misc
 /modem			emmc	/dev/block/bootdevice/by-name/modem					flags=slotselect;backup=1;display="Modem"
