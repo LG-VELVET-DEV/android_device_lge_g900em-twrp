@@ -3,14 +3,31 @@ LOCAL_PATH := device/lge/g900em
 # define hardware platform
 PRODUCT_PLATFORM := lito
 
-#TEST
 # A/B support
+AB_OTA_UPDATER := true
+
+# VNDK
+PRODUCT_TARGET_VNDK_VERSION := 30
+
+# A/B
+ENABLE_VIRTUAL_AB := true
+$(call inherit-product, $(SRC_TARGET_DIR)/product/virtual_ab_ota.mk)
+
+# A/B updater updatable partitions list. Keep in sync with the partition list
+# with "_a" and "_b" variants in the device. Note that the vendor can add more
+# more partitions to this list for the bootloader and radio.
+AB_OTA_PARTITIONS += \
+    boot \
+    system \
+    vendor \
+    vbmeta \
+    dtbo
+
 PRODUCT_PACKAGES += \
     otapreopt_script \
     update_engine \
     update_engine_sideload \
     update_verifier
-
 
 AB_OTA_POSTINSTALL_CONFIG += \
     RUN_POSTINSTALL_system=true \
@@ -20,16 +37,18 @@ AB_OTA_POSTINSTALL_CONFIG += \
 
 # Boot control HAL
 PRODUCT_PACKAGES += \
-    android.hardware.boot@1.0-impl \
-    android.hardware.boot@1.0-service \
-    android.hardware.boot@1.0-impl-wrapper.recovery \
-    android.hardware.boot@1.0-impl-wrapper \
-    android.hardware.boot@1.0-impl-recovery \
-    bootctrl.lito \
+    android.hardware.boot@1.1-impl-qti.recovery \
     bootctrl.lito.recovery \
 
-PRODUCT_HOST_PACKAGES += \
-    libandroidicu
+# qcom decryption
+PRODUCT_PACKAGES += \
+    qcom_decrypt \
+    qcom_decrypt_fbe
+
+# fastbootd
+PRODUCT_PACKAGES += \
+    android.hardware.fastboot@1.0-impl-mock \
+    fastbootd
 
 # Soong namespaces
 PRODUCT_SOONG_NAMESPACES += \

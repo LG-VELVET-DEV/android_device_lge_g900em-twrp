@@ -15,9 +15,9 @@
 #
 
 PRODUCT_MAKEFILES := \
-    $(LOCAL_DIR)/omni_g900em.mk
+    $(LOCAL_DIR)/twrp_g900em.mk
 
 COMMON_LUNCH_CHOICES := \
-    omni_g900em-user \
-    omni_g900em-userdebug \
-    omni_g900em-eng
+    twrp_g900em-user \
+    twrp_g900em-userdebug \
+    twrp_g900em-eng
